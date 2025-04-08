@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Service
+metadata:
+  name: kubernetes
+  description: kubernetes service
+  annotations:
+    backstage.io/kubernetes-label-selector: 'app.kubernetes.io/instance=backstage'
+
+spec:
+  type: microservice
+  lifecycle: production
+  owner: team-alpha
+  system: core-systems
