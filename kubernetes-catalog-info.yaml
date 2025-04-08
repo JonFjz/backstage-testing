@@ -7,7 +7,6 @@ metadata:
     backstage.io/kubernetes-label-selector: 'app.kubernetes.io/instance=backstage'
 
 spec:
-  type: microservice
+  type: service
   lifecycle: production
-  owner: team-alpha
-  system: core-systems
+  owner: guest
