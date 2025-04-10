@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: kubernetes-test4
+  description: kubernetes service
+  annotations:
+    'backstage.io/kubernetes-label-selector': 'app.kubernetes.io/instance=backstage'
+
+spec:
+  type: service
+  lifecycle: production
+  owner: user:default/guest
