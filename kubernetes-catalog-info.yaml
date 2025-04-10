@@ -4,7 +4,7 @@ metadata:
   name: kubernetes
   description: kubernetes service
   annotations:
-    backstage.io/kubernetes-namespace: 'vaultwarden'
+    backstage.io/kubernetes-namespace: 'vp-player'
 
 spec:
   type: service
