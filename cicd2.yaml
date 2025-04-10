@@ -1,0 +1,14 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cicd2
+  description: cicd service
+  annotations:
+    dev.azure.com/host-org: dev.azure.com/gjirafadev
+    dev.azure.com/project: DevOps
+    dev.azure.com/build-definition: CRM-Skeleton
+
+spec:
+  type: service
+  lifecycle: production
+  owner: user:default/guest
