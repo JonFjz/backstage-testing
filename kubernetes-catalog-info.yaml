@@ -4,7 +4,7 @@ metadata:
   name: kubernetes
   description: kubernetes service
   annotations:
-    backstage.io/kubernetes-label-selector: 'app.kubernetes.io/instance=backstage'
+    backstage.io/kubernetes-namespace: 'vaultwarden'
 
 spec:
   type: service
