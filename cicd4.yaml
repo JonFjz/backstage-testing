@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cicd4
+  description: cicd service
+  annotations:
+    dev.azure.com/host-org: dev.azure.com/gjirafadev
+    dev.azure.com/project: DevOps
+    dev.azure.com/build-definition: CRM-Skeleton
+    'backstage.io/kubernetes-label-selector': 'app.kubernetes.io/instance=backstage'
+
+spec:
+  type: service
+  lifecycle: production
+  owner: user:default/guest
