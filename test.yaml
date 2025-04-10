@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: kubernetes-test
+  description: kubernetes service
+  annotations:
+    'backstage.io/kubernetes-namespace': vp-player
+
+spec:
+  type: service
+  lifecycle: production
+  owner: user:default/guest
