@@ -1,0 +1,8 @@
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: shqipi
+  annotations:
+    google.com/email: shqiperim@gjirafa.com
+spec:
+  memberOf: []
