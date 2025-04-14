@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: test
+  annotations:
+    google.com/email: test@gjirafa.com
+spec:
+  memberOf:
+    - group:default/backstage-admins
