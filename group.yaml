@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: backstage-admins
+  description: Backstage Administrators
+spec:
+  type: team
+  profile:
+    displayName: Backstage Admins
+  children: []
