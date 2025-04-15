@@ -1,0 +1,8 @@
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: fjzlh
+  annotations:
+    google.com/email: jon.fjzlh@gmail.com
+spec:
+  memberOf: []
