@@ -1,0 +1,184 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-catalog-entity-azure
+  title: Create Catalog User or Group (Azure DevOps)
+  description: Creates a new User or Group entity and publishes it to Azure DevOps.
+spec:
+  owner: group:default/backstage-admins # Or whoever manages users/groups
+  type: administration
+
+  parameters:
+    # --- Step 1: Common Information & Kind Selection ---
+    - title: Entity Details
+      required:
+        - entityKind
+        - entityName
+        #- targetRepoUrl # Keep this parameter
+      properties:
+        entityKind:
+          title: Entity Kind
+          type: string
+          description: Select the type of entity to create.
+          enum: [User, Group]
+          default: User
+          ui:autofocus: true
+        entityName:
+          title: Entity Name (Unique ID)
+          type: string
+          description: Unique name for the entity (e.g., 'jsmith', 'platform-team'). Used as metadata.name.
+        # targetRepoUrl:
+        #   title: Target Azure DevOps Repository
+        #   type: string
+        #   description: Select the Azure DevOps Org/Project/Repo (e.g., https://dev.azure.com/org/project/_git/repo).
+        #   ui:field: RepoUrlPicker
+        #   ui:options:
+        #     # --- AZURE DEVOPS CHANGES ---
+        #     allowedHosts: [dev.azure.com] # Allow Azure DevOps host
+        #     # You might want to restrict by Org and Project:
+        #     allowedOrganizations: ['gjirafadev', 'gjirafatech'] # Your configured Orgs
+        #     # allowedProjects: ['YourProjectName'] # Optional: Add specific project(s)
+        #     # --- END AZURE DEVOPS CHANGES ---
+        # --- Fields relevant ONLY to User ---
+        email:
+          title: User - Primary Email Address
+          type: string
+          description: Required if Kind is User. Used for auth matching.
+          pattern: '^\\S+@\\S+\\.\\S+$'
+          ui:warnings:
+            - 'Ensure this matches the email used for authentication.'
+        userDisplayName:
+          title: User - Display Name (Optional)
+          type: string
+          description: How the user's name should appear.
+        # userGroups:
+        #   title: User - Group Membership (Optional)
+        #   type: array
+        #   description: Select groups the user should belong to.
+        #   ui:field: EntityPicker
+        #   ui:options:
+        #     multiple: true
+        #     catalogFilter: { kind: Group }
+        #     defaultKind: group
+        # --- Fields relevant ONLY to Group ---
+        groupDescription:
+          title: Group - Description
+          type: string
+          description: Required if Kind is Group. A brief description of the group.
+        groupType:
+          title: Group - Type
+          type: string
+          description: Required if Kind is Group. The type of group.
+          default: team
+          enum: [team, guild, infrastructure]
+        groupOwner:
+          title: Group - Owner (Optional)
+          type: string
+          description: Select the owning User or Group for this new Group.
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter: { kind: [Group, User] }
+        groupParent:
+          title: Group - Parent Group (Optional)
+          type: string
+          description: Select the parent group, if this is a sub-group.
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter: { kind: Group }
+            defaultKind: group
+            allowArbitraryValues: false
+
+      # --- Conditional Requirements ---
+      allOf:
+        - if:
+            properties: { entityKind: { const: User } }
+          then:
+            required: [email]
+        - if:
+            properties: { entityKind: { const: Group } }
+          then:
+            required: [groupDescription, groupType]
+
+  # --- Steps executed in the backend ---
+  steps:
+    # --- Step 2a: Fetch USER Skeleton (Conditional) ---
+    - id: fetch-user-skeleton
+      name: Fetch User Skeleton
+      if: ${{ parameters.entityKind == 'User' }}
+      action: fetch:template
+      input:
+        url: ./template/user-skeleton.yaml
+        values:
+          username: ${{ parameters.entityName }}
+          email: ${{ parameters.email }}
+          displayName: ${{ parameters.userDisplayName | default(parameters.entityName) }}
+          memberOfString: |
+            {%- set groups = parameters.userGroups or [] -%}
+            {%- for group in groups %}
+            - {{ group }}
+            {%- endfor %}
+
+    # --- Step 2b: Fetch GROUP Skeleton (Conditional) ---
+    - id: fetch-group-skeleton
+      name: Fetch Group Skeleton
+      if: ${{ parameters.entityKind == 'Group' }}
+      action: fetch:template
+      input:
+        url: ./template/group-skeleton.yaml
+        values:
+          groupName: ${{ parameters.entityName }}
+          description: ${{ parameters.groupDescription }}
+          type: ${{ parameters.groupType }}
+          ownerString: |
+            {%- if parameters.groupOwner %}
+            owner: ${{ parameters.groupOwner }}
+            {%- endif %}
+          parentString: |
+            {%- if parameters.groupParent %}
+            parent: ${{ parameters.groupParent }}
+            {%- endif %}
+
+    # --- Step 3a: Publish USER Entity to Azure DevOps (Conditional) ---
+    - id: publish-user
+      name: Publish User Definition to Azure DevOps
+      if: ${{ parameters.entityKind == 'User' }}
+      # --- CHANGE ACTION ---
+      action: publish:azure
+      input:
+        allowedHosts: [dev.azure.com] # Match parameter option
+        repoUrl: https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test # Get URL from user selection
+        filePath: backstage-test/users/${{ parameters.entityName }}.yaml # Publish to users/ directory
+        commitMessage: "feat: Add Backstage user ${{ parameters.entityName }}"
+        sourcePath: .
+
+    # --- Step 3b: Publish GROUP Entity to Azure DevOps (Conditional) ---
+    - id: publish-group
+      name: Publish Group Definition to Azure DevOps
+      if: ${{ parameters.entityKind == 'Group' }}
+      # --- CHANGE ACTION ---
+      action: publish:azure
+      input:
+        allowedHosts: [dev.azure.com] # Match parameter option
+        repoUrl: https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test # Get URL from user selection
+        filePath: backstage-test/users/${{ parameters.entityName }}.yaml # Publish to users/ directory
+        commitMessage: "feat: Add Backstage group ${{ parameters.entityName }}"
+        sourcePath: .
+
+  # --- Output (Optional) ---
+  # output:
+  #   links:
+  #     - title: Target Azure DevOps Repository
+  #       # The targetRepoUrl directly points to the repo
+  #       url: https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test
+  #     - title: Generated Entity File Path (approx)
+  #       # Constructing the exact file view URL for Azure DevOps can be tricky,
+  #       # linking to the repo might be sufficient, or adjust based on observed URLs.
+  #       # This attempts a common pattern but might need tweaking.
+  #       url: >
+  #         {%- set parsed = parameters.targetRepoUrl | parseRepoUrl -%}
+  #         {%- set base = "https://%s/%s/%s/_git/%s" | format(parsed.host, parsed.owner, parsed.project, parsed.repo) -%}
+  #         {%- if parameters.entityKind == 'User' -%}
+  #         {{ base }}?path=%2Fusers%2F${{ parameters.entityName }}.yaml&version=GBmain
+  #         {%- else -%}
+  #         {{ base }}?path=%2Fgroups%2F${{ parameters.entityName }}.yaml&version=GBmain
+  #         {%- endif -%}
