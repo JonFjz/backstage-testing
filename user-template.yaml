@@ -1,0 +1,44 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-group
+  title: Create a Backstage Group
+  description: Scaffold a new Group entity in Backstage
+spec:
+  owner: group:default/backstage-admins
+  type: administration
+
+  parameters:
+    - title: Group Information
+      required: [groupName, description, type, displayName]
+      properties:
+        groupName:
+          type: string
+          title: Group Name
+        description:
+          type: string
+          title: Description
+        type:
+          type: string
+          title: Type (e.g., team, department)
+          default: team
+        displayName:
+          type: string
+          title: Display Name
+
+  steps:
+    - id: template
+      name: Generating Group YAML
+      action: fetch:template
+      input:
+        url: https://raw.githubusercontent.com/JonFjz/backstage-testing/refs/heads/main/group-skeleton.yaml
+        values:
+          groupName: ${{ parameters.groupName }}
+          description: ${{ parameters.description }}
+          type: ${{ parameters.type }}
+          displayName: ${{ parameters.displayName }}
+
+  output:
+    links:
+      - title: Open the group YAML
+        url: ./catalog-info.yaml
