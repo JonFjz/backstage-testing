@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: ${{ values.username }}
+  annotations:
+    google.com/email: ${{ values.email }}
+spec:
+  profile:
+    displayName: ${{ values.displayName }}
+    email: ${{ values.email }}
+  memberOf:
+    ${{ values.memberOfString }}
