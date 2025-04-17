@@ -1,0 +1,60 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-user
+  title: Create a Backstage User
+  description: Scaffold a new User entity in Backstage
+spec:
+  owner: group:default/backstage-admins
+  type: administration
+
+  parameters:
+    - title: User Information
+      required: [username, email, displayName, memberOfString]
+      properties:
+        username:
+          type: string
+          title: Username
+        email:
+          type: string
+          title: Email
+          format: email
+        displayName:
+          type: string
+          title: Display Name
+        memberOfString:
+          type: array
+          title: Member Of (Groups)
+          items:
+            type: string
+          description: List of groups the user is a member of
+
+  steps:
+    - id: template
+      name: Generating User YAML
+      action: fetch:template
+      input:
+        url: ./user-skeleton.yaml
+        values:
+          username: ${{ parameters.username }}
+          email: ${{ parameters.email }}
+          displayName: ${{ parameters.displayName }}
+          memberOfString: ${{ parameters.memberOfString }}
+
+    - id: publish
+      name: Publish User YAML to Azure DevOps Repo
+      action: publish:azure
+      input:
+        allowedHosts: [dev.azure.com]
+        repoUrl: https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test
+        filePath: backstage-user-group/${{ parameters.username }}.yaml
+        commitMessage: "feat: Add Backstage user ${{ parameters.username }}"
+        sourcePath: .
+  output:
+    links:
+      - title: View Repo Location
+        url: https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test?path=%2Fbackstage-user-group
+      - title: View Published YAML File (Approx)
+        url: >
+          {%- set repoBase = "https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test" -%}
+          {{ repoBase }}?path=%2Fbackstage-user-group%2F${{ parameters.username }}.yaml&version=GBmain
