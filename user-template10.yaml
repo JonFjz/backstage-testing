@@ -1,0 +1,82 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-user-github
+  title: Create a Backstage User
+  description: Scaffold a new User entity in Backstage
+spec:
+  owner: group:default/backstage-admins
+  type: administration
+
+  parameters:
+    - title: User Information
+      required: [username, email, displayName]
+      properties:
+        username:
+          type: string
+          title: Username
+        email:
+          type: string
+          title: Email
+          format: email
+        displayName:
+          type: string
+          title: Display Name
+        # memberOfString:
+        #   type: array
+        #   title: Member Of (Groups)
+        #   items:
+        #     type: string
+        #   description: List of groups the user is a member of
+
+  steps:
+    - id: cloneAzureRepo
+      name: Clone Target Azure Repo
+      action: azure:repo:clone
+      input:
+        remoteUrl: "https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test"
+        branch: "main"
+        targetPath: app/repo-workdir
+
+    - id: template
+      name: Generating User YAML
+      action: fetch:template
+      input:
+        url: ./user-skeleton.yaml
+        targetPath: app/repo-workdir/${{ parameters.username }}.yaml
+        values:
+          username: ${{ parameters.username }}
+          email: ${{ parameters.email }}
+          displayName: ${{ parameters.displayName }}
+          # memberOfString: |
+          #   {%- set groups = parameters.memberOfString or [] -%}
+          #   {%- for group in groups %}
+          #   - {{ group }}
+          #   {%- endfor %}
+
+    - id: pushAzureRepo
+      name: Push User YAML to Azure DevOps Repo
+      action: azure:repo:push
+      input:
+        branch: "main"
+        sourcePath: app/repo-workdir
+        gitCommitMessage: "feat: Add Backstage user ${{ parameters.username }}"
+
+
+    # --- Registration Step (Optional but Recommended) ---
+    # This assumes the Douglas plugin outputs are compatible or you use standard actions
+    # If azure:repo:push doesn't provide repoContentsUrl, you might need to construct it or rely on location discovery
+    # - id: register
+    #   name: Register User in Backstage Catalog
+    #   action: catalog:register
+    #   input:
+    #     # Construct the URL needed by catalog:register
+    #     repoContentsUrl: "https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test" # Need to check if branch info is needed here
+    #     catalogInfoPath: /users/${{ parameters.username }}.yaml
+
+  output:
+    links:
+      - title: View Repo Location
+        url: https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test?path=%2Fbackstage-user-group
+      - title: View Published YAML File (Approx)
+        url: https://dev.azure.com/gjirafadev/DevOps/_git/backstage-test?path=%2Fbackstage-user-group%2F${{ parameters.username }}.yaml&version=GBmain
